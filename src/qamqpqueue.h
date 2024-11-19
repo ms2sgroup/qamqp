@@ -94,6 +94,7 @@ public Q_SLOTS:
     // AMQP Queue
     void declare(int options = Durable|AutoDelete, const QAmqpTable &arguments = QAmqpTable());
     void bind(const QString &exchangeName, const QString &key);
+    void bind(const QString &exchangeName, const QString &key, const QAmqpTable &args);
     void bind(QAmqpExchange *exchange, const QString &key);
     void unbind(const QString &exchangeName, const QString &key);
     void unbind(QAmqpExchange *exchange, const QString &key);

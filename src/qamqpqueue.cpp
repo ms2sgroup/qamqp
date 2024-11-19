@@ -455,6 +455,36 @@ void QAmqpQueue::bind(const QString &exchangeName, const QString &key)
     d->sendFrame(frame);
 }
 
+void QAmqpQueue::bind(const QString &exchangeName, const QString &key, const QAmqpTable &args)
+{
+    Q_D(QAmqpQueue);
+    if (!d->opened) {
+        d->delayedBindings.append(QPair<QString,QString>(exchangeName, key));
+        return;
+    }
+
+    QAmqpMethodFrame frame(QAmqpFrame::Queue, QAmqpQueuePrivate::miBind);
+    frame.setChannel(d->channelNumber);
+
+    QByteArray arguments;
+    QDataStream out(&arguments, QIODevice::WriteOnly);
+
+    out << qint16(0);   //  reserved 1
+    QAmqpFrame::writeAmqpField(out, QAmqpMetaType::ShortString, d->name);
+    QAmqpFrame::writeAmqpField(out, QAmqpMetaType::ShortString, exchangeName);
+    QAmqpFrame::writeAmqpField(out, QAmqpMetaType::ShortString, key);
+
+    out << qint8(0);    //  no-wait
+    QAmqpFrame::writeAmqpField(out, QAmqpMetaType::Hash, args);
+
+    qAmqpDebug("<- queue#bind( queue=%s, exchange=%s, routing-key=%s, no-wait=%d )",
+               qPrintable(d->name), qPrintable(exchangeName), qPrintable(key),
+               0);
+
+    frame.setArguments(arguments);
+    d->sendFrame(frame);
+}
+
 void QAmqpQueue::unbind(QAmqpExchange *exchange, const QString &key)
 {
     if (!exchange) {
